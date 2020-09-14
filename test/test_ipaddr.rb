@@ -96,6 +96,13 @@ class TC_IPAddr < Test::Unit::TestCase
     assert_equal("1:2:3:4:5:6:7:0", IPAddr.new("1:2:3:4:5:6:7::").to_s)
     assert_equal("0:2:3:4:5:6:7:8", IPAddr.new("::2:3:4:5:6:7:8").to_s)
 
+    b = IPAddr.new("192.168.10.98/255.255.255.224")
+    a = IPAddr.new(b)
+    assert_equal(a.to_s, "192.168.10.96")
+    assert_equal(a.to_unmasked_string, "192.168.10.98")
+    assert_equal(a.family, Socket::AF_INET)
+    assert_equal(a.inspect, "#<IPAddr: IPv4:192.168.10.96/255.255.255.224>")
+
     assert_raise(IPAddr::InvalidAddressError) { IPAddr.new("192.168.0.256") }
     assert_raise(IPAddr::InvalidAddressError) { IPAddr.new("192.168.0.011") }
     assert_raise(IPAddr::InvalidAddressError) { IPAddr.new("fe80::1%") }

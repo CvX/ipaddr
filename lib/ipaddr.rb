@@ -563,11 +563,11 @@ class IPAddr
 
   private
 
-  # Creates a new ipaddr object either from a human readable IP
-  # address representation in string, or from a packed in_addr value
-  # followed by an address family.
+  # Creates a new ipaddr object from a human readable IP address
+  # representation in string, from a packed in_addr value
+  # followed by an address family, or from another ipaddr object.
   #
-  # In the former case, the following are the valid formats that will
+  # In the first case, the following are the valid formats that will
   # be recognized: "address", "address/prefixlen" and "address/mask",
   # where IPv6 address may be enclosed in square brackets (`[' and
   # `]').  If a prefixlen or a mask is specified, it returns a masked
@@ -582,7 +582,11 @@ class IPAddr
   # those, such as &, |, include? and ==, accept a string, or a packed
   # in_addr value instead of an IPAddr object.
   def initialize(addr = '::', family = Socket::AF_UNSPEC)
-    if !addr.kind_of?(String)
+    if addr.kind_of?(IPAddr)
+      prefix = addr.to_unmasked_string
+      prefixlen = addr.prefix
+      family = addr.family
+    elsif !addr.kind_of?(String)
       case family
       when Socket::AF_INET, Socket::AF_INET6
         set(addr.to_i, family)
@@ -594,8 +598,9 @@ class IPAddr
       else
         raise AddressFamilyError, "unsupported address family: #{family}"
       end
+    else
+      prefix, prefixlen = addr.split('/', 2)
     end
-    prefix, prefixlen = addr.split('/', 2)
     if prefix =~ /\A\[(.*)\]\z/i
       prefix = $1
       family = Socket::AF_INET6
